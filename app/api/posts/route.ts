@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { getPosts } from "@/lib/posts";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { prisma, isDatabaseAvailable } from "@/lib/prisma";
 
 const postCreateSchema = z.object({
   title: z.string().min(1, {
@@ -73,6 +73,14 @@ export async function POST(request: Request) {
       userId = user.id;
     }
 
+    // Verify database is available
+    if (!(await isDatabaseAvailable())) {
+      return NextResponse.json(
+        { error: "Database is currently unavailable" },
+        { status: 503 }
+      );
+    }
+
     // Verify user exists
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -86,25 +94,41 @@ export async function POST(request: Request) {
     }
 
     // Create the post
-    const newPost = await prisma.post.create({
-      data: {
-        title,
-        content,
-        published,
-        authorId: userId,
-      },
-    });
-
-    return NextResponse.json(
-      {
-        post: {
-          ...newPost,
-          createdAt: newPost.createdAt.toISOString(),
-          updatedAt: newPost.updatedAt.toISOString(),
+    try {
+      const newPost = await prisma.post.create({
+        data: {
+          title,
+          content,
+          published,
+          authorId: userId,
         },
-      },
-      { status: 201 }
-    );
+      });
+
+      // Format the response consistently
+      return NextResponse.json(
+        {
+          success: true,
+          post: {
+            id: newPost.id,
+            title: newPost.title,
+            content: newPost.content,
+            published: newPost.published,
+            authorId: newPost.authorId,
+            createdAt: newPost.createdAt.toISOString(),
+            updatedAt: newPost.updatedAt.toISOString(),
+          },
+        },
+        { status: 201 }
+      );
+    } catch (dbError) {
+      return NextResponse.json(
+        {
+          error: "Failed to create post in database",
+          details: dbError instanceof Error ? dbError.message : String(dbError),
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Post creation error:", error);
     return NextResponse.json(

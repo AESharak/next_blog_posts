@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -18,6 +18,7 @@ import {
 import { Icons } from "@/components/ui/icons";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
+import { useRedirectIfAuthenticated } from "@/lib/auth-hooks";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -30,7 +31,12 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+
+  // Redirect authenticated users
+  const { loading: authLoading } = useRedirectIfAuthenticated();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,7 +62,7 @@ export function LoginForm() {
       }
 
       toast.success("Logged in successfully!");
-      router.push("/dashboard");
+      router.push(callbackUrl);
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -64,6 +70,14 @@ export function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Icons.spinner className="h-6 w-6 animate-spin" />
+      </div>
+    );
   }
 
   return (
@@ -122,7 +136,7 @@ export function LoginForm() {
         className="w-full"
         onClick={() => {
           setIsLoading(true);
-          signIn("google", { callbackUrl: "/dashboard" });
+          signIn("google", { callbackUrl });
         }}
         disabled={isLoading}
       >

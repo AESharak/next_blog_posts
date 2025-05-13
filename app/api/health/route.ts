@@ -1,25 +1,33 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseAvailable } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    // Try to run a simple database query
-    await prisma.$queryRaw`SELECT 1`;
+    const dbAvailable = await isDatabaseAvailable();
 
-    return NextResponse.json({
-      status: "ok",
-      message: "Database connection successful",
-    });
-  } catch (error) {
-    console.error("Health check failed:", error);
+    if (!dbAvailable) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "Service unavailable",
+        },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
       {
-        status: "error",
-        message: "Database connection failed",
-        error: error instanceof Error ? error.message : String(error),
+        status: "ok",
       },
-      { status: 503 } // Service Unavailable
+      { status: 200 }
+    );
+  } catch {
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "Health check failed",
+      },
+      { status: 500 }
     );
   }
 }

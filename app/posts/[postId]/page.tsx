@@ -14,7 +14,8 @@ interface PostPageProps {
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
-  const post = await getPostById(params.postId);
+  const resolvedParams = await Promise.resolve(params);
+  const post = await getPostById(resolvedParams.postId);
 
   if (!post) {
     return {
@@ -29,7 +30,8 @@ export async function generateMetadata({
 }
 
 export default async function PostPage({ params }: PostPageProps) {
-  const post = await getPostById(params.postId);
+  const resolvedParams = await Promise.resolve(params);
+  const post = await getPostById(resolvedParams.postId);
 
   if (!post || !post.published) {
     notFound();
@@ -39,8 +41,8 @@ export default async function PostPage({ params }: PostPageProps) {
     <div className="container max-w-4xl mx-auto px-4 py-12">
       <div className="mb-8">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/" className="flex items-center">
-            ← Back to Home
+          <Link href="/blog" className="flex items-center">
+            ← Back to Blog
           </Link>
         </Button>
       </div>
@@ -48,7 +50,9 @@ export default async function PostPage({ params }: PostPageProps) {
       <article className="prose dark:prose-invert lg:prose-lg mx-auto">
         <h1>{post.title}</h1>
         <div className="text-sm text-muted-foreground mb-8">
-          <p>Published • {formatDate(post.createdAt)}</p>
+          <p>
+            By {post.author.name} • Published {formatDate(post.createdAt)}
+          </p>
         </div>
 
         <div className="mt-8">

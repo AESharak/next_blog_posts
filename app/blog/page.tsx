@@ -15,7 +15,8 @@ interface BlogPageProps {
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const currentPage = searchParams.page ? parseInt(searchParams.page) : 1;
+  const params = await Promise.resolve(searchParams);
+  const currentPage = params.page ? parseInt(params.page) : 1;
   const { posts, totalPages } = await getPosts(currentPage, 9);
 
   return (

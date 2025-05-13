@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma, isDatabaseAvailable } from "./prisma";
 
 export async function getSession() {
@@ -7,7 +7,10 @@ export async function getSession() {
     const session = await getServerSession(authOptions);
     return session;
   } catch (error) {
-    console.error("Error getting session:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error getting session:", error);
+    }
     return null;
   }
 }
@@ -43,14 +46,20 @@ export async function getCurrentUser() {
         updatedAt: currentUser.updatedAt.toISOString(),
       };
     } catch (dbError) {
-      console.error("Database error when finding user:", dbError);
+      // Log errors only in development
+      if (process.env.NODE_ENV === "development") {
+        console.error("Database error when finding user:", dbError);
+      }
       throw new Error(
         "Database error: " +
           (dbError instanceof Error ? dbError.message : String(dbError))
       );
     }
   } catch (error) {
-    console.error("Error getting current user:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error getting current user:", error);
+    }
     throw error; // Propagate the error so page components can handle it
   }
 }

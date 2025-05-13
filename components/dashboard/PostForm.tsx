@@ -89,14 +89,37 @@ export function PostForm({ userId, post }: PostFormProps) {
     };
 
     try {
+      // Check database status before submitting
+      const healthResponse = await fetch("/api/health");
+
+      if (!healthResponse.ok) {
+        setIsDatabaseAvailable(false);
+        toast.error(
+          "Database appears to be offline. Cannot create or edit posts."
+        );
+        setError("Database connection failed. Please try again later.");
+        setIsLoading(false);
+        return;
+      }
+
       if (post) {
         // Update post
-        await axios.patch(`/api/posts/${post.id}`, formData);
+        await axios.patch(`/api/posts/${post.id}`, formData, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
         toast.success("Post updated successfully");
       } else {
-        // Create post
-        const response = await axios.post("/api/posts", formData);
-        console.log("Post creation response:", response.data);
+        // Create post with proper headers
+        await axios.post("/api/posts", formData, {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
+
         toast.success("Post created successfully");
       }
 
@@ -205,35 +228,6 @@ export function PostForm({ userId, post }: PostFormProps) {
             )}
             {post ? "Update" : "Create"} Post
           </Button>
-
-          {!post && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  const response = await fetch("/api/auth/session");
-                  const data = await response.json();
-
-                  if (!data?.user) {
-                    toast.error(
-                      "You are not logged in. Please log in to create posts."
-                    );
-                    setError("Not authenticated");
-                    return;
-                  }
-
-                  toast.info(
-                    `Logged in as ${data.user.email}. You can create posts!`
-                  );
-                } catch {
-                  toast.error("Could not verify login status");
-                }
-              }}
-            >
-              Check Login Status
-            </Button>
-          )}
         </div>
       </form>
     </div>

@@ -4,7 +4,7 @@ import { getPosts } from "@/lib/posts";
 import { formatDate } from "@/lib/utils";
 
 export default async function Home() {
-  const { posts } = await getPosts(1, 5);
+  const { posts } = await getPosts(1, 3);
 
   return (
     <div className="container max-w-7xl mx-auto px-4 py-12">
@@ -16,18 +16,27 @@ export default async function Home() {
           Share your thoughts, ideas and stories with the world. Create
           beautiful blog posts with our simple and elegant platform.
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4 justify-center">
           <Button asChild size="lg">
             <Link href="/auth/login">Sign In</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link href="/auth/signup">Create Account</Link>
           </Button>
+          <Button asChild variant="secondary" size="lg">
+            <Link href="/blog">Explore Blog</Link>
+          </Button>
         </div>
       </div>
 
       <div className="my-16">
-        <h2 className="text-3xl font-bold mb-8">Latest Posts</h2>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold">Latest Posts</h2>
+          <Button asChild variant="ghost">
+            <Link href="/blog">View All Posts →</Link>
+          </Button>
+        </div>
+
         {posts.length > 0 ? (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
@@ -60,23 +69,32 @@ export default async function Home() {
       <div className="border-t pt-12">
         <h2 className="text-3xl font-bold mb-8">Join Our Community</h2>
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-card p-6 rounded-lg border">
+          <div className="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
             <h3 className="text-xl font-bold mb-2">Create</h3>
             <p className="mb-4">
               Write and publish your own blog posts with our easy-to-use editor.
             </p>
+            <Button asChild variant="link" className="px-0">
+              <Link href="/dashboard/posts/new">Start Writing →</Link>
+            </Button>
           </div>
-          <div className="bg-card p-6 rounded-lg border">
-            <h3 className="text-xl font-bold mb-2">Connect</h3>
+          <div className="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold mb-2">Manage</h3>
             <p className="mb-4">
-              Join a community of writers and readers who share your interests.
+              Use your dashboard to organize, edit and publish your content.
             </p>
+            <Button asChild variant="link" className="px-0">
+              <Link href="/dashboard">Go to Dashboard →</Link>
+            </Button>
           </div>
-          <div className="bg-card p-6 rounded-lg border">
-            <h3 className="text-xl font-bold mb-2">Grow</h3>
+          <div className="bg-card p-6 rounded-lg border hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold mb-2">Explore</h3>
             <p className="mb-4">
-              Gain readers and get feedback to improve your writing skills.
+              Discover posts from other writers and get inspired by their work.
             </p>
+            <Button asChild variant="link" className="px-0">
+              <Link href="/blog">Browse Posts →</Link>
+            </Button>
           </div>
         </div>
       </div>

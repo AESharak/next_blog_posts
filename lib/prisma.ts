@@ -1,7 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 
+// PrismaClient is attached to the `global` object in development to prevent
+// exhausting your database connection limit.
 const globalForPrisma = global as unknown as {
-  prisma: PrismaClient;
+  prisma: PrismaClient | undefined;
   isConnected: boolean;
 };
 
@@ -9,7 +11,7 @@ const globalForPrisma = global as unknown as {
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: ["error", "warn"],
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     errorFormat: "pretty",
   });
 
@@ -23,8 +25,11 @@ globalForPrisma.isConnected = false;
     await prisma.$queryRaw`SELECT 1`;
     globalForPrisma.isConnected = true;
   } catch (error) {
-    console.error("Failed to connect to database:", error);
     globalForPrisma.isConnected = false;
+    // Only log in development mode
+    if (process.env.NODE_ENV === "development") {
+      console.error("Failed to connect to database:", error);
+    }
   }
 })();
 

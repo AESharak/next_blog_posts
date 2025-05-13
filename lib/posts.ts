@@ -38,7 +38,10 @@ export async function getPosts(page = 1, limit = 10) {
       currentPage: page,
     };
   } catch (error) {
-    console.error("Error fetching posts:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching posts:", error);
+    }
     return { posts: [], totalPages: 0, currentPage: 1 };
   }
 }
@@ -78,7 +81,10 @@ export async function getUserPosts(userId: string, page = 1, limit = 10) {
       currentPage: page,
     };
   } catch (error) {
-    console.error("Error fetching user posts:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching user posts:", error);
+    }
     return { posts: [], totalPages: 0, currentPage: 1 };
   }
 }
@@ -108,7 +114,10 @@ export async function getPostById(id: string) {
       updatedAt: post.updatedAt.toISOString(),
     };
   } catch (error) {
-    console.error("Error fetching post:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error fetching post:", error);
+    }
     return null;
   }
 }
@@ -125,6 +134,16 @@ export async function createPost({
   authorId: string;
 }) {
   try {
+    // Verify the user exists first
+    const user = await prisma.user.findUnique({
+      where: { id: authorId },
+    });
+
+    if (!user) {
+      throw new Error(`User with ID ${authorId} not found`);
+    }
+
+    // Create the post
     const post = await prisma.post.create({
       data: {
         title,
@@ -134,7 +153,13 @@ export async function createPost({
       },
     });
 
+    // Revalidate paths to update UI
     revalidatePath("/dashboard");
+    revalidatePath("/posts");
+
+    if (published) {
+      revalidatePath("/");
+    }
 
     return {
       ...post,
@@ -142,7 +167,10 @@ export async function createPost({
       updatedAt: post.updatedAt.toISOString(),
     };
   } catch (error) {
-    console.error("Error creating post:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error creating post:", error);
+    }
     throw error;
   }
 }
@@ -177,7 +205,10 @@ export async function updatePost({
       updatedAt: post.updatedAt.toISOString(),
     };
   } catch (error) {
-    console.error("Error updating post:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error updating post:", error);
+    }
     throw error;
   }
 }
@@ -192,7 +223,10 @@ export async function deletePost(id: string) {
 
     return true;
   } catch (error) {
-    console.error("Error deleting post:", error);
+    // Log errors only in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error deleting post:", error);
+    }
     throw error;
   }
 }

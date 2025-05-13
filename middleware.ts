@@ -4,38 +4,32 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Define public paths that don't require authentication
-  const publicPaths = ["/", "/auth/login", "/auth/signup"];
+  // Skip middleware for asset and API routes
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.includes("/public/") ||
+    pathname.includes(".") ||
+    pathname.startsWith("/api/")
+  ) {
+    return NextResponse.next();
+  }
 
-  // Check if the path is public
-  const isPublicPath = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith("/api/")
-  );
-
-  // Get the token
+  // Get the authentication token
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // Redirect logic based on auth status
-  if (isPublicPath && token) {
-    // If user is authenticated and trying to access a public route
-    // Redirect them to the dashboard
-    if (pathname !== "/") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  // Protect dashboard routes - redirect to login if no token
+  if (pathname.startsWith("/dashboard") && !token) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", encodeURIComponent(pathname));
+    return NextResponse.redirect(loginUrl);
   }
 
-  if (!isPublicPath && !token) {
-    // If user is not authenticated and trying to access a protected route
-    // Redirect them to the login page
-    return NextResponse.redirect(
-      new URL(
-        `/auth/login?callbackUrl=${encodeURIComponent(pathname)}`,
-        request.url
-      )
-    );
+  // Redirect from auth pages to dashboard if user is logged in
+  if ((pathname === "/auth/login" || pathname === "/auth/signup") && token) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();
@@ -43,14 +37,5 @@ export async function middleware(request: NextRequest) {
 
 // Configure which routes the middleware applies to
 export const config = {
-  matcher: [
-    /*
-     * Match all paths except:
-     * 1. /_next (Next.js internals)
-     * 2. /api/auth (NextAuth.js API routes)
-     * 3. /static (public assets)
-     * 4. .*\\..*$ (files with extensions - i.e. images)
-     */
-    "/((?!_next|api/auth|static|.*\\..*$).*)",
-  ],
+  matcher: ["/((?!_next|static|favicon.ico).*)"],
 };

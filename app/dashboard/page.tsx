@@ -3,7 +3,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { PostList } from "@/components/dashboard/PostList";
 import { CreatePostButton } from "@/components/dashboard/CreatePostButton";
 import { getUserPosts } from "@/lib/posts";
-import { getCurrentUser, getSession } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { DatabaseErrorMessage } from "@/components/ui/DatabaseErrorMessage";
 import { redirect } from "next/navigation";
 
@@ -14,15 +14,7 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
   try {
-    // Debug - log session data
-    const session = await getSession();
-    console.log("Session data:", session);
-
     const user = await getCurrentUser();
-    console.log(
-      "Current user:",
-      user ? { id: user.id, email: user.email } : "Not authenticated"
-    );
 
     // If no user is found, redirect to login page
     if (!user) {
@@ -31,7 +23,6 @@ export default async function DashboardPage() {
     }
 
     const posts = await getUserPosts(user.id);
-    console.log(`Found ${posts.posts.length} posts for user ${user.id}`);
 
     return (
       <div className="container max-w-7xl py-10">
@@ -52,7 +43,10 @@ export default async function DashboardPage() {
       throw error; // Let Next.js handle the redirect
     }
 
-    console.error("Dashboard loading error:", error);
+    // Only log errors in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Dashboard loading error:", error);
+    }
 
     // Show error UI for database errors
     return (

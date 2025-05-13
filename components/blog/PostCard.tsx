@@ -31,7 +31,7 @@ export function PostCard({ post }: PostCardProps) {
     <Card className="overflow-hidden">
       <CardHeader className="p-6">
         <CardTitle className="line-clamp-2 text-2xl">
-          <Link href={`/blog/${post.id}`} className="hover:underline">
+          <Link href={`/posts/${post.id}`} className="hover:underline">
             {post.title}
           </Link>
         </CardTitle>
