@@ -1,0 +1,11 @@
+{
+  "name": "db-check-scripts",
+  "version": "1.0.0",
+  "description": "Database utilities for the blog app",
+  "main": "check-db.js",
+  "type": "commonjs",
+  "scripts": {
+    "check": "node check-db.js"
+  },
+  "private": true
+}
