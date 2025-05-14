@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json(
         {
           status: "error",
-          message: "Service unavailable",
+          message: "Database unavailable",
         },
         { status: 503 }
       );
